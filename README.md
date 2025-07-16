@@ -1,80 +1,59 @@
+# Command Center X
 
-
-
-Command Center X Readme
-Command Center X
 High-visibility Salesforce operations console that surfaces governor limit consumption, Flow execution health, CI/CD deployment status, and real-time performance alerts in one admin-only workspace.
 
-Status: Reference implementation. Deploy to scratch, sandbox, or production orgs. Last Updated: 16 Jul 2025 (PT).
+**Status:** Reference implementation. Deploy to scratch, sandbox, or production orgs. **Last Updated:** 16 Jul 2025 (PT).
 
-Table of Contents
-1. Why Command Center X Exists
+---
 
-2. Core Features
+## Table of Contents
 
-3. Architecture Overview
+* [1. Why Command Center X Exists](#1-why-command-center-x-exists)
+* [2. Core Features](#2-core-features)
+* [3. Architecture Overview](#3-architecture-overview)
+* [4. Component Map](#4-component-map)
+* [5. Quick Start (Scratch Org)](#5-quick-start-scratch-org)
+* [6. Install to Sandbox or Production](#6-install-to-sandbox-or-production)
+* [7. Post-Install Configuration Checklist](#7-post-install-configuration-checklist)
+* [8. Dashboards & Components Usage](#8-dashboards--components-usage)
 
-4. Component Map
+  * [8.1 Apex Governor Limits Dashboard](#81-apex-governor-limits-dashboard)
+  * [8.2 Flow Execution Monitor](#82-flow-execution-monitor)
+  * [8.3 Deployment Monitor Dashboard](#83-deployment-monitor-dashboard)
+  * [8.4 Performance Alert Panel](#84-performance-alert-panel)
+* [9. Problem → Feature → Business Value Table](#9-problem--feature--business-value-table)
+* [10. DAT-Specific Callouts (Sales Tech Use Case)](#10-dat-specific-callouts-sales-tech-use-case)
+* [11. Configuration: Thresholds, Auto-Refresh, Alert Routing](#11-configuration-thresholds-auto-refresh-alert-routing)
+* [12. Security & Access Control](#12-security--access-control)
+* [13. CI/CD Integration (DevOps Center + GitHub Actions)](#13-cicd-integration-devops-center--github-actions)
+* [14. Data Model & Metadata Assets](#14-data-model--metadata-assets)
+* [15. Extensibility Patterns](#15-extensibility-patterns)
+* [16. Troubleshooting](#16-troubleshooting)
 
-5. Quick Start (Scratch Org)
 
-6. Install to Sandbox or Production
+---
 
-7. Post-Install Configuration Checklist
+## 1. Why Command Center X Exists
 
-8. Dashboards & Components Usage
-
-8.1 Apex Governor Limits Dashboard
-
-8.2 Flow Execution Monitor
-
-8.3 Deployment Monitor Dashboard
-
-8.4 Performance Alert Panel
-
-9. Problem → Feature → Business Value Table
-
-10. DAT-Specific Callouts (Sales Tech Use Case)
-
-11. Configuration: Thresholds, Auto-Refresh, Alert Routing
-
-12. Security & Access Control
-
-13. CI/CD Integration (DevOps Center + GitHub Actions)
-
-14. Data Model & Metadata Assets
-
-15. Extensibility Patterns
-
-16. Troubleshooting
-
-17. Video Learning Index
-
-18. FAQ
-
-19. Contributing
-
-20. License
-
-1. Why Command Center X Exists
 Salesforce orgs accumulate technical debt fast: unmanaged Flows, ad-hoc Apex, growing data volume, and unclear deployment health lead to slow delivery and incidents that surface too late. Command Center X centralizes real-time operational signals so administrators see issues before users do. It reduces blind spots, accelerates troubleshooting, and provides quantifiable performance metrics that leadership understands.
 
-2. Core Features
-Apex governor limit telemetry with visual CPU-over-threshold alerting (default CPU threshold 9,500 ms vs 10,000 limit).
+---
 
-Flow execution logging to custom object for run counts, fault rate, and top offenders.
+## 2. Core Features
 
-CI/CD deployment result feeds from DevOps Center or custom Deployment records.
+* Apex governor limit telemetry with visual CPU-over-threshold alerting (default CPU threshold 9,500 ms vs 10,000 limit).
+* Flow execution logging to custom object for run counts, fault rate, and top offenders.
+* CI/CD deployment result feeds from DevOps Center or custom Deployment records.
+* Platform Event based real-time alerting for high CPU, SOQL, DML breaches, or Flow faults.
+* Auto-refresh (default 60s) plus manual refresh control.
+* Admin-only visibility via dedicated permission set.
+* Chart.js powered visualizations (doughnut, gauge, bar).
 
-Platform Event based real-time alerting for high CPU, SOQL, DML breaches, or Flow faults.
+---
 
-Auto-refresh (default 60s) plus manual refresh control.
+## 3. Architecture Overview
 
-Admin-only visibility via dedicated permission set.
-
-Chart.js powered visualizations (doughnut, gauge, bar).
-
-3. Architecture Overview
+```
 External Data Layer (Mockaroo, CSV Imports)
         ↓
 Salesforce Core (Accounts, Contacts, Opportunities, Freight Lane, Carrier)
@@ -86,21 +65,23 @@ Analytics Layer (CRM Analytics Dashboards, Tableau CRM Recipes)
 Logging Layer (Flow_Execution__c, Performance_Alert__e)
         ↓
 DevOps Layer (DevOps Center Pipelines, GitHub Actions)
+```
+
 Color Legend used in diagrams:
 
-Blue = Data
+* Blue = Data
+* Green = Automation
+* Yellow = Analytics
+* Red = Logging
+* Gray = DevOps
 
-Green = Automation
+---
 
-Yellow = Analytics
+## 4. Component Map
 
-Red = Logging
-
-Gray = DevOps
-
-4. Component Map
 Directory layout as deployed via SFDX.
 
+```
 command-center-x/
 ├── README.md
 ├── sfdx-project.json
@@ -121,9 +102,15 @@ command-center-x/
     ├── events/Performance_Alert__e/
     ├── permissionsets/Command_Center_Admin.permissionset-meta.xml
     └── dashboards/ (CRM Analytics JSON configs)
-5. Quick Start (Scratch Org)
-Assumes Node + npm installed.
+```
 
+---
+
+## 5. Quick Start (Scratch Org)
+
+> Assumes Node + npm installed.
+
+```bash
 # 1. Clone
 git clone https://github.com/YOUR-ORG/command-center-x.git
 cd command-center-x
@@ -145,9 +132,15 @@ sfdx force:data:tree:import -f data/sample-plan.json -u CCX
 
 # 7. Open org
 sfdx force:org:open -u CCX -p /lightning/n/Command_Center_X
-6. Install to Sandbox or Production
+```
+
+---
+
+## 6. Install to Sandbox or Production
+
 Minimal commands for a direct metadata deploy (no scratch).
 
+```bash
 # 1. Authorize target org
 echo "Browser opens; login to target org"
 sfdx auth:web:login -a TargetOrg
@@ -163,81 +156,112 @@ sfdx force:user:permset:assign -n Command_Center_Admin -o TargetOrg
 # 4. Upload Chart.js static resource (Setup > Static Resources > New > ChartJS411.zip)
 
 # 5. Add Command Center tab to Admin App.
-7. Post-Install Configuration Checklist
-Step	Required	Description	Location
-Upload Chart.js static resource	Yes	Required for charts to render	Setup > Static Resources
-Verify Platform Event "Performance_Alert__e"	Yes	Ensure event exists & fields deployed	Setup > Platform Events
-Confirm Flow_Execution__c object	Yes	Add to Nav + grant field perms	Object Manager
-Add LWC to Lightning App Page	Yes	Build a Command Center Lightning App page	Lightning App Builder
-Assign Command_Center_Admin perm set	Yes	Controls visibility	Setup > Permission Sets
-Configure alert subscriptions (email/Slack)	Optional	Use Flow or Apex Trigger on event	Automation Studio
-Adjust thresholds (if using Custom Metadata)	Optional	CCX_Threshold__mdt	Custom Metadata Types
-8. Dashboards & Components Usage
+```
+
+---
+
+## 7. Post-Install Configuration Checklist
+
+| Step                                            | Required | Description                               | Location                 |
+| ----------------------------------------------- | -------- | ----------------------------------------- | ------------------------ |
+| Upload Chart.js static resource                 | Yes      | Required for charts to render             | Setup > Static Resources |
+| Verify Platform Event "Performance\_Alert\_\_e" | Yes      | Ensure event exists & fields deployed     | Setup > Platform Events  |
+| Confirm Flow\_Execution\_\_c object             | Yes      | Add to Nav + grant field perms            | Object Manager           |
+| Add LWC to Lightning App Page                   | Yes      | Build a Command Center Lightning App page | Lightning App Builder    |
+| Assign Command\_Center\_Admin perm set          | Yes      | Controls visibility                       | Setup > Permission Sets  |
+| Configure alert subscriptions (email/Slack)     | Optional | Use Flow or Apex Trigger on event         | Automation Studio        |
+| Adjust thresholds (if using Custom Metadata)    | Optional | CCX\_Threshold\_\_mdt                     | Custom Metadata Types    |
+
+---
+
+## 8. Dashboards & Components Usage
+
 Each LWC reads from an Apex controller and refreshes on interval (default 60s). All LWCs include manual Refresh buttons.
 
-8.1 Apex Governor Limits Dashboard
-Component: systemMonitorDashboard Source Apex: LimitMetrics.fetchGovernorStats() Displays CPU time, heap, SOQL count, DML count. Highlights red if CPU > 9,500 ms.
+### 8.1 Apex Governor Limits Dashboard
 
-8.2 Flow Execution Monitor
-Component: flowExecutionMonitor Source Apex: query Flow_Execution__c aggregated by Flow name, fault count, last run. Instrument Flows by inserting an Apex Action call to FlowExecutionLogger.log.
+Component: `systemMonitorDashboard` Source Apex: `LimitMetrics.fetchGovernorStats()` Displays CPU time, heap, SOQL count, DML count. Highlights red if CPU > 9,500 ms.
 
-8.3 Deployment Monitor Dashboard
-Component: deploymentMonitorDashboard Source Apex: query DevOps Center Deployment records or custom object Deployment__c (map to stage, duration, success/fail count). Surfaces promotion velocity.
+### 8.2 Flow Execution Monitor
 
-8.4 Performance Alert Panel
-Component: performanceAlertPanel Listens to Platform Event Performance_Alert__e. Shows live scrolling feed of events above configured thresholds (CPU, SOQL, DML, Flow faults). Optional subscribe-to-Slack automation.
+Component: `flowExecutionMonitor` Source Apex: query `Flow_Execution__c` aggregated by Flow name, fault count, last run. Instrument Flows by inserting an Apex Action call to `FlowExecutionLogger.log`.
 
-9. Problem → Feature → Business Value Table
-Problem	CCX Feature	Value (Time / Risk / Adoption)
-CPU spikes crash user transactions without warning	Red threshold alert + real-time Platform Event	Faster incident response; protects revenue workflows
-Unknown Flow fault rate	Flow Execution logging + fault %	Targeted remediation; reduces user-report volume
-Slow release cadence; failed deployments	Deployment Monitor pipeline telemetry	Shorter lead time for change; fewer rollback hours
-Admins lack unified signal	Single Lightning App page with 4 dashboards	Shared situational awareness; better cross-team coordination
-10. DAT-Specific Callouts (Sales Tech Use Case)
+### 8.3 Deployment Monitor Dashboard
+
+Component: `deploymentMonitorDashboard` Source Apex: query DevOps Center Deployment records or custom object `Deployment__c` (map to stage, duration, success/fail count). Surfaces promotion velocity.
+
+### 8.4 Performance Alert Panel
+
+Component: `performanceAlertPanel` Listens to Platform Event `Performance_Alert__e`. Shows live scrolling feed of events above configured thresholds (CPU, SOQL, DML, Flow faults). Optional subscribe-to-Slack automation.
+
+---
+
+## 9. Problem → Feature → Business Value Table
+
+| Problem                                            | CCX Feature                                    | Value (Time / Risk / Adoption)                               |
+| -------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------ |
+| CPU spikes crash user transactions without warning | Red threshold alert + real-time Platform Event | Faster incident response; protects revenue workflows         |
+| Unknown Flow fault rate                            | Flow Execution logging + fault %               | Targeted remediation; reduces user-report volume             |
+| Slow release cadence; failed deployments           | Deployment Monitor pipeline telemetry          | Shorter lead time for change; fewer rollback hours           |
+| Admins lack unified signal                         | Single Lightning App page with 4 dashboards    | Shared situational awareness; better cross-team coordination |
+
+---
+
+## 10. DAT-Specific Callouts (Sales Tech Use Case)
+
 DAT cares about: sales velocity, data quality across carriers/lanes, and reliable release throughput. Map CCX capabilities to these outcomes.
 
-DAT Pain	CCX Alignment	Talking Point
-Sales org slows when automation errors block lead routing	Flow Execution Monitor pinpoints bottleneck Flows; alert before routing fails	Keeps opportunities flowing to reps; protects top-line bookings
-Freight & carrier data quality drifts after acquisitions	Add validation + logging Flows; track fault rate by carrier onboarding Flow	Data trust accelerates analytics & pricing accuracy
-Release risk across multiple teams	Deployment Monitor shows pipeline health & failure trend	Predictable releases; compresses downtime windows
-11. Configuration: Thresholds, Auto-Refresh, Alert Routing
-11.1 Thresholds
+| DAT Pain                                                  | CCX Alignment                                                                 | Talking Point                                                   |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Sales org slows when automation errors block lead routing | Flow Execution Monitor pinpoints bottleneck Flows; alert before routing fails | Keeps opportunities flowing to reps; protects top-line bookings |
+| Freight & carrier data quality drifts after acquisitions  | Add validation + logging Flows; track fault rate by carrier onboarding Flow   | Data trust accelerates analytics & pricing accuracy             |
+| Release risk across multiple teams                        | Deployment Monitor shows pipeline health & failure trend                      | Predictable releases; compresses downtime windows               |
+
+---
+
+## 11. Configuration: Thresholds, Auto-Refresh, Alert Routing
+
+### 11.1 Thresholds
+
 Default CPU critical: 9,500 ms. Modify in JS or externalize:
 
-Custom Metadata Type: CCX_Threshold__mdt fields CPU__c, Heap__c, SOQL__c, DML__c.
+* Custom Metadata Type: `CCX_Threshold__mdt` fields CPU\_\_c, Heap\_\_c, SOQL\_\_c, DML\_\_c.
+* Retrieve via Apex utility `CCX_Config.getThreshold('CPU')`.
 
-Retrieve via Apex utility CCX_Config.getThreshold('CPU').
+### 11.2 Auto-Refresh Interval
 
-11.2 Auto-Refresh Interval
-Default 60s. Change setInterval() value in each component or expose in Custom Metadata.
+Default 60s. Change `setInterval()` value in each component or expose in Custom Metadata.
 
-11.3 Alert Routing
-Subscribe to Platform Event Performance_Alert__e using:
+### 11.3 Alert Routing
 
-Flow (Record-Triggered on Event Bus)
+Subscribe to Platform Event `Performance_Alert__e` using:
 
-Apex Trigger to send email, Slack webhook, Teams, PagerDuty
+* Flow (Record-Triggered on Event Bus)
+* Apex Trigger to send email, Slack webhook, Teams, PagerDuty
+* Mulesoft or external listener via CometD
 
-Mulesoft or external listener via CometD
+---
 
-12. Security & Access Control
-Permission Set: Command_Center_Admin grants object, field, and event access plus LWC visibility.
+## 12. Security & Access Control
 
-Lightning App visibility filtered to users with perm set.
+* Permission Set: `Command_Center_Admin` grants object, field, and event access plus LWC visibility.
+* Lightning App visibility filtered to users with perm set.
+* Shield Event Monitoring customers can extend CCX by ingesting EventLogFile metrics.
+* Restrict Platform Event subscription tokens in external middleware.
 
-Shield Event Monitoring customers can extend CCX by ingesting EventLogFile metrics.
+---
 
-Restrict Platform Event subscription tokens in external middleware.
+## 13. CI/CD Integration (DevOps Center + GitHub Actions)
 
-13. CI/CD Integration (DevOps Center + GitHub Actions)
-13.1 DevOps Center Flow
-Project in DevOps Center mapped to GitHub repo.
+### 13.1 DevOps Center Flow
 
-Work items track metadata changes; promote through Environments (Dev, UAT, Prod).
+1. Project in DevOps Center mapped to GitHub repo.
+2. Work items track metadata changes; promote through Environments (Dev, UAT, Prod).
+3. Deployment Monitor queries DevOps Center records (or custom mirror object) to render pass/fail by stage and average cycle time.
 
-Deployment Monitor queries DevOps Center records (or custom mirror object) to render pass/fail by stage and average cycle time.
+### 13.2 GitHub Actions Sample
 
-13.2 GitHub Actions Sample
+```yaml
 name: Deploy-to-Sandbox
 on:
   push:
@@ -252,77 +276,103 @@ jobs:
         run: sfdx auth:jwt:grant --clientid ${{ secrets.CONSUMER_KEY }} --jwtkeyfile server.key --username ${{ secrets.SF_USERNAME }} --instanceurl https://test.salesforce.com -a SANDBOX
       - name: Deploy Metadata
         run: sfdx project deploy start -o SANDBOX
-14. Data Model & Metadata Assets
-14.1 Custom Object: Flow_Execution__c
-Fields: Flow_Name__c (Text), Primary_Record__c (Lookup), Run_Time__c (DateTime), Status__c (Picklist Success|Fault), CPU__c (Number), SOQL__c (Number), DML__c (Number).
+```
 
-14.2 Platform Event: Performance_Alert__e
-Fields: Metric__c, Value__c, Threshold__c, Severity__c (Formula), Context_Record__c (Text 18), Stack__c (Long Text 131k optional).
+---
 
-14.3 Optional Custom Object: Deployment__c (if not using DevOps Center API)
-Fields: Stage__c, Result__c, Duration_Seconds__c, Components__c, Timestamp__c.
+## 14. Data Model & Metadata Assets
 
-15. Extensibility Patterns
-Add Health Check ingestion: nightly batch reads Setup Health Check scores into CCX.
+### 14.1 Custom Object: Flow\_Execution\_\_c
 
-Einstein GPT summarizer: weekly digest of top 5 CPU offenders.
+Fields: Flow\_Name\_\_c (Text), Primary\_Record\_\_c (Lookup), Run\_Time\_\_c (DateTime), Status\_\_c (Picklist Success|Fault), CPU\_\_c (Number), SOQL\_\_c (Number), DML\_\_c (Number).
 
-Data Cloud integration: correlate high-limit usage with segments or data spikes.
+### 14.2 Platform Event: Performance\_Alert\_\_e
 
-Shield Event Monitoring: feed API transaction counts into charts.
+Fields: Metric\_\_c, Value\_\_c, Threshold\_\_c, Severity\_\_c (Formula), Context\_Record\_\_c (Text 18), Stack\_\_c (Long Text 131k optional).
 
-Installable AppExchange packaging: convert to unlocked package for upgrade paths.
+### 14.3 Optional Custom Object: Deployment\_\_c (if not using DevOps Center API)
 
-16. Troubleshooting
-Symptom	Likely Cause	Fix
-Blank charts	Missing Chart.js static resource	Upload zip; clear cache; reload
-Data never updates	Apex errors or missing permission set	Check Debug Logs; assign Command_Center_Admin
-Alert Panel empty	No Platform Events published	Confirm PerformanceAlertPublisher.publish() is called
-Flow Monitor empty	Flows not instrumented	Add Apex Action to Flows calling FlowExecutionLogger.log
-Deployment Monitor stale	No DevOps Center connection	Configure API user or custom Deployment__c feed
-17. Video Learning Index
+Fields: Stage\_\_c, Result\_\_c, Duration\_Seconds\_\_c, Components\_\_c, Timestamp\_\_c.
+
+---
+
+## 15. Extensibility Patterns
+
+* Add Health Check ingestion: nightly batch reads Setup Health Check scores into CCX.
+* Einstein GPT summarizer: weekly digest of top 5 CPU offenders.
+* Data Cloud integration: correlate high-limit usage with segments or data spikes.
+* Shield Event Monitoring: feed API transaction counts into charts.
+* Installable AppExchange packaging: convert to unlocked package for upgrade paths.
+
+---
+
+## 16. Troubleshooting
+
+| Symptom                  | Likely Cause                          | Fix                                                        |
+| ------------------------ | ------------------------------------- | ---------------------------------------------------------- |
+| Blank charts             | Missing Chart.js static resource      | Upload zip; clear cache; reload                            |
+| Data never updates       | Apex errors or missing permission set | Check Debug Logs; assign Command\_Center\_Admin            |
+| Alert Panel empty        | No Platform Events published          | Confirm `PerformanceAlertPublisher.publish()` is called    |
+| Flow Monitor empty       | Flows not instrumented                | Add Apex Action to Flows calling `FlowExecutionLogger.log` |
+| Deployment Monitor stale | No DevOps Center connection           | Configure API user or custom Deployment\_\_c feed          |
+
+---
+
+## 17. Video Learning Index
+
 Verified July 2025.
 
-Topic	Video	Notes
-Create Developer Edition Org	https://www.youtube.com/watch?v=7HJAbMSaoeE	Fast free org setup
-Install Salesforce CLI	https://www.youtube.com/watch?v=RUOvKct2sxI	CLI install guide
-Git Basics	https://www.youtube.com/watch?v=HVsySz-h9r4	Repo fundamentals
-Push to Scratch Org	https://www.youtube.com/watch?v=3Gd47-i5_dw	Source push walkthrough
-Assign Permission Set	https://www.youtube.com/watch?v=ev7Rf3COVxc	UI + CLI steps
-Alt Dev Org Video	https://www.youtube.com/watch?v=BYdqjtw6GO4	Backup tutorial
-Alt Dev Org Deep Dive	https://www.youtube.com/watch?v=T7aWFbN-EJg	Extended version
-SaaSGuru Dev Org	https://www.youtube.com/watch?v=02p5yfqbntQ	Detailed setup
-18. FAQ
-Q: Do I need Shield? A: No. Shield adds extended telemetry but is optional.
+| Topic                        | Video                                                                                       | Notes                   |
+| ---------------------------- | ------------------------------------------------------------------------------------------- | ----------------------- |
+| Create Developer Edition Org | [https://www.youtube.com/watch?v=7HJAbMSaoeE](https://www.youtube.com/watch?v=7HJAbMSaoeE)  | Fast free org setup     |
+| Install Salesforce CLI       | [https://www.youtube.com/watch?v=RUOvKct2sxI](https://www.youtube.com/watch?v=RUOvKct2sxI)  | CLI install guide       |
+| Git Basics                   | [https://www.youtube.com/watch?v=HVsySz-h9r4](https://www.youtube.com/watch?v=HVsySz-h9r4)  | Repo fundamentals       |
+| Push to Scratch Org          | [https://www.youtube.com/watch?v=3Gd47-i5\_dw](https://www.youtube.com/watch?v=3Gd47-i5_dw) | Source push walkthrough |
+| Assign Permission Set        | [https://www.youtube.com/watch?v=ev7Rf3COVxc](https://www.youtube.com/watch?v=ev7Rf3COVxc)  | UI + CLI steps          |
+| Alt Dev Org Video            | [https://www.youtube.com/watch?v=BYdqjtw6GO4](https://www.youtube.com/watch?v=BYdqjtw6GO4)  | Backup tutorial         |
+| Alt Dev Org Deep Dive        | [https://www.youtube.com/watch?v=T7aWFbN-EJg](https://www.youtube.com/watch?v=T7aWFbN-EJg)  | Extended version        |
+| SaaSGuru Dev Org             | [https://www.youtube.com/watch?v=02p5yfqbntQ](https://www.youtube.com/watch?v=02p5yfqbntQ)  | Detailed setup          |
 
-Q: Can non-admins see the dashboards? A: Only if granted the permission set or if page-level security is relaxed.
+---
 
-Q: How do I change the CPU threshold without editing code? A: Enable the Custom Metadata Type extension (Section 11) and update values in the UI.
+## 18. FAQ
 
-Q: Does this capture historical governor usage across transactions? A: Native Limits.get*() reports current-context usage. Persist historical data by writing to a custom object in triggers or scheduled jobs.
+**Q:** Do I need Shield? **A:** No. Shield adds extended telemetry but is optional.
 
-19. Contributing
-Fork repo.
+**Q:** Can non-admins see the dashboards? **A:** Only if granted the permission set or if page-level security is relaxed.
 
-Create feature branch.
+**Q:** How do I change the CPU threshold without editing code? **A:** Enable the Custom Metadata Type extension (Section 11) and update values in the UI.
 
-Add tests (LWC Jest + Apex test classes min 75% cov; cover alert publish logic > 1 event path).
+**Q:** Does this capture historical governor usage across transactions? **A:** Native `Limits.get*()` reports current-context usage. Persist historical data by writing to a custom object in triggers or scheduled jobs.
 
-Submit pull request with description + before/after screenshot.
+---
+
+## 19. Contributing
+
+1. Fork repo.
+2. Create feature branch.
+3. Add tests (LWC Jest + Apex test classes min 75% cov; cover alert publish logic > 1 event path).
+4. Submit pull request with description + before/after screenshot.
 
 Coding Standards:
 
-Apex PMD clean (no critical).
+* Apex PMD clean (no critical).
+* LWC ESLint clean.
+* Naming: CCX\_ for shared utilities.
 
-LWC ESLint clean.
+---
 
-Naming: CCX_ for shared utilities.
+## 20. License
 
-20. License
 MIT unless superseded by enterprise distribution agreement. See LICENSE file.
 
-Appendix A. Representative Code Snippets
-LWC: systemMonitorDashboard.js
+---
+
+## Appendix A. Representative Code Snippets
+
+### LWC: systemMonitorDashboard.js
+
+```javascript
 import { LightningElement } from 'lwc';
 import fetchGovernorStats from '@salesforce/apex/LimitMetrics.fetchGovernorStats';
 import { loadScript } from 'lightning/platformResourceLoader';
@@ -356,7 +406,11 @@ export default class SystemMonitorDashboard extends LightningElement {
     }).catch(err => console.error('Stats error', err));
   }
 }
-Apex: LimitMetrics.cls
+```
+
+### Apex: LimitMetrics.cls
+
+```apex
 public with sharing class LimitMetrics {
   @AuraEnabled(cacheable=true)
   public static Map<String,Integer> fetchGovernorStats() {
@@ -368,7 +422,11 @@ public with sharing class LimitMetrics {
     };
   }
 }
-Apex: FlowExecutionLogger.cls (Invocable for Flows)
+```
+
+### Apex: FlowExecutionLogger.cls (Invocable for Flows)
+
+```apex
 public with sharing class FlowExecutionLogger {
   @InvocableMethod(label='Log Flow Execution')
   public static void log(List<Id> recordIds) {
@@ -380,7 +438,11 @@ public with sharing class FlowExecutionLogger {
     insert fe;
   }
 }
-Apex: PerformanceAlertPublisher.cls
+```
+
+### Apex: PerformanceAlertPublisher.cls
+
+```apex
 public with sharing class PerformanceAlertPublisher {
   public static void publish(String metric, Integer value, Integer threshold) {
     if (value > threshold) {
@@ -393,24 +455,25 @@ public with sharing class PerformanceAlertPublisher {
     }
   }
 }
-Appendix B. Sample Flow Instrumentation Steps
-Open Flow Builder; edit target Flow.
+```
 
-Add Action element.
+---
 
-Type = Apex. Select "Log Flow Execution" (FlowExecutionLogger.log).
+## Appendix B. Sample Flow Instrumentation Steps
 
-Pass {!$Record.Id} or a collection depending on entry context.
+1. Open Flow Builder; edit target Flow.
+2. Add Action element.
+3. Type = Apex. Select "Log Flow Execution" (FlowExecutionLogger.log).
+4. Pass {!\$Record.Id} or a collection depending on entry context.
+5. Save + Activate.
+6. Run Flow; verify record created in Flow Executions tab.
 
-Save + Activate.
+---
 
-Run Flow; verify record created in Flow Executions tab.
+## Appendix C. Lightning App Page Layout Suggestion
 
-Appendix C. Lightning App Page Layout Suggestion
-Region 1 (full width): Apex Governor Limits donut.
+* Region 1 (full width): Apex Governor Limits donut.
+* Region 2 left: Flow Execution table.
+* Region 2 right: Deployment status bar chart.
+* Region 3 (full width): Real-time Alert feed.
 
-Region 2 left: Flow Execution table.
-
-Region 2 right: Deployment status bar chart.
-
-Region 3 (full width): Real-time Alert feed.
