@@ -17,7 +17,7 @@ The architecture leverages a decoupled, event-driven model for observability and
 
 **2. Quick Start & Deployment**
 - **Clone the Repository:**  
-  `git clone https://github.com/your-username/dat-command-center-x.git`
+  `git clone https://github.com/derickporter1993/dat-command-center-x.git`
 - **Prerequisites:**  
   Complete Section 0 of the main blueprint (Salesforce Developer Org, JWT certificate, Connected App, GitHub Secrets: CLI_CLIENT_ID, SF_USERNAME, JWT_KEY).
 - **Authorize Org:**  
@@ -43,7 +43,6 @@ A robust CI/CD pipeline powered by GitHub Actions ensures that every push to the
 **5. Analytics & Insights**
 Embedded CRM Analytics dashboards provide both predictive and diagnostic insights. The "Predictive Lead Conversion" model scores open leads, enabling sales teams to prioritize high-value opportunities and optimize their workflow.
 
-*(Optional: Embed a GIF of the main dashboard highlighting predictive lead scores and data quality metrics.)*
 
 **6. Metrics Achieved (Demonstrated)**
 | KPI                                 | Demo Value            | Business Impact                                             |
